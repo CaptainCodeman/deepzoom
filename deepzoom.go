@@ -50,10 +50,10 @@ func New(width, height, size, overlap int) *DeepZoom {
 	}
 }
 
-// MinLevel returns the minimum level that requires slicing into tiles.
-// Levels below this are instead scaled versions of the full image.
+// MinLevel returns the minimum level that is the complete image
+// Levels below this are just smaller scale versions of the full image.
 func (dz *DeepZoom) MinLevel() int {
-	minLevel := int(math.Ceil(math.Log(float64(dz.Size+1)) / math.Log(2)))
+	minLevel := int(math.Ceil(math.Log(float64(dz.Size)) / math.Log(2)))
 	return minLevel
 }
 
@@ -146,4 +146,47 @@ func (t *Tile) Bounds() image.Rectangle {
 	}
 
 	return image.Rect(x1, y1, x2, y2)
+}
+
+// CropScale returns the crop and scale values relative to the source image
+// for image decoders that can resize and crop in a single operation (e.g. WebP)
+func (t *Tile) CropScale() (image.Rectangle, image.Rectangle) {
+	x1 := t.Col * t.Size
+	y1 := t.Row * t.Size
+	x2 := x1 + t.Size - 1 + t.Overlap
+	y2 := y1 + t.Size - 1 + t.Overlap
+
+	if t.Col > 0 {
+		x1 -= t.Overlap
+	}
+	if t.Row > 0 {
+		y1 -= t.Overlap
+	}
+
+	r := t.Layer.Bounds()
+	if x2 >= r.Dx() {
+		x2 = r.Dx() - 1
+	}
+
+	if y2 >= r.Dy() {
+		y2 = r.Dy() - 1
+	}
+
+	w := x2 - x1 + 1
+	h := y2 - y1 + 1
+
+	x1 = int(math.Ceil(float64(x1) / t.Scale))
+	y1 = int(math.Ceil(float64(y1) / t.Scale))
+	x2 = int(math.Ceil(float64(x2) / t.Scale))
+	y2 = int(math.Ceil(float64(y2) / t.Scale))
+
+	if x2 >= t.DeepZoom.Width {
+		x2 = t.DeepZoom.Width - 1
+	}
+
+	if y2 >= t.DeepZoom.Height {
+		y2 = t.DeepZoom.Height - 1
+	}
+
+	return image.Rect(x1, y1, x2, y2), image.Rect(0, 0, w, h)
 }
