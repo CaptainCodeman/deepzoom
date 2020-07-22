@@ -50,19 +50,20 @@ func New(width, height, size, overlap int) *DeepZoom {
 	}
 }
 
+func (dz *DeepZoom) maxDimension() float64 {
+	return math.Max(float64(dz.Width), float64(dz.Height))
+}
+
 // MinLevel returns the minimum level that is the complete image
 // Levels below this are just smaller scale versions of the full image.
 func (dz *DeepZoom) MinLevel() int {
-	minLevel := int(math.Log2(float64(dz.Size)))
-	return minLevel
+	return dz.MaxLevel() - int(math.Ceil(math.Log2(dz.maxDimension()/float64(dz.Size))))
 }
 
 // MaxLevel returns the maximum level corresponding to 1:1 resolution.
 // Levels beyond would just be scaling up the image which adds nothing.
 func (dz *DeepZoom) MaxLevel() int {
-	maxDimension := math.Max(float64(dz.Width), float64(dz.Height))
-	maxLevel := int(math.Ceil(math.Log2(maxDimension)))
-	return maxLevel
+	return int(math.Ceil(math.Log2(dz.maxDimension())))
 }
 
 // Layer returns the layer for the requested level

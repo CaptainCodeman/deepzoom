@@ -2,6 +2,8 @@ package deepzoom
 
 import (
 	"fmt"
+	"log"
+	"math"
 	"testing"
 )
 
@@ -231,4 +233,44 @@ func TestY(t *testing.T) {
 	}
 
 	fmt.Printf("total %d tiles\n", count)
+}
+
+func TestCalc(t *testing.T) {
+	tests := []struct {
+		width  int
+		height int
+		size   int
+	}{
+		{1024, 1024, 254},
+		{608, 798, 254},
+		{2995, 4493, 254},
+		{2400, 3600, 254},
+		{10000, 10000, 254},
+		{254, 254, 254},
+		{6000, 4000, 128},
+		{6000, 4000, 16},
+	}
+
+	for _, test := range tests {
+		w := test.width
+		h := test.height
+
+		maxDimension := math.Max(float64(test.width), float64(test.height))
+
+		maxLevel := int(math.Ceil(math.Log2(maxDimension)))
+		minLevel := maxLevel - int(math.Ceil(math.Log2(maxDimension/float64(test.size))))
+
+		log.Printf("%d x %d, %d, levels %d - %d", test.width, test.height, test.size, minLevel, maxLevel)
+
+		for level := maxLevel; level >= minLevel; level-- {
+			scale := math.Pow(0.5, float64(maxLevel-level))
+			lw := int(math.Ceil(float64(test.width) * scale))
+			lh := int(math.Ceil(float64(test.height) * scale))
+			cols := int(math.Ceil(float64(w) / float64(test.size)))
+			rows := int(math.Ceil(float64(h) / float64(test.size)))
+			log.Printf("level %d / %d: %d x %d, %f %d x %d, %d x %d", level, level-minLevel, w, h, scale, lw, lh, cols, rows)
+			w = (w + 1) >> 1
+			h = (h + 1) >> 1
+		}
+	}
 }
