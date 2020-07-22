@@ -53,7 +53,7 @@ func New(width, height, size, overlap int) *DeepZoom {
 // MinLevel returns the minimum level that is the complete image
 // Levels below this are just smaller scale versions of the full image.
 func (dz *DeepZoom) MinLevel() int {
-	minLevel := int(math.Ceil(math.Log(float64(dz.Size)) / math.Log(2)))
+	minLevel := int(math.Log2(float64(dz.Size)))
 	return minLevel
 }
 
@@ -61,7 +61,7 @@ func (dz *DeepZoom) MinLevel() int {
 // Levels beyond would just be scaling up the image which adds nothing.
 func (dz *DeepZoom) MaxLevel() int {
 	maxDimension := math.Max(float64(dz.Width), float64(dz.Height))
-	maxLevel := int(math.Ceil(math.Log(maxDimension) / math.Log(2)))
+	maxLevel := int(math.Ceil(math.Log2(maxDimension)))
 	return maxLevel
 }
 
@@ -75,6 +75,7 @@ func (dz *DeepZoom) Layer(level int) (*Layer, error) {
 	}
 
 	scale := math.Pow(0.5, float64(max-level))
+
 	layer := &Layer{
 		DeepZoom: dz,
 		Level:    level,
